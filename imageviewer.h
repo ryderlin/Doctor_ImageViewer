@@ -40,6 +40,7 @@
 
 #ifndef IMAGEVIEWER_H
 #define IMAGEVIEWER_H
+#define QT_NO_PRINTER
 
 #include <QMainWindow>
 #ifndef QT_NO_PRINTER
@@ -71,6 +72,8 @@ private slots:
     void normalSize();
     void fitToWindow();
     void about();
+    void slotReset();
+    void slotSave();
 
 private:
     void createActions();

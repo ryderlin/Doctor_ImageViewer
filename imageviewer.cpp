@@ -66,8 +66,13 @@ public:
     {
         this->Parent = parent;
         qlPixelInfo = new QLabel(this);
-        qlPixelInfo->setStyleSheet("QLabel { color : red; }");
+//        qlPixelInfo->setStyleSheet("QLabel { color : red; }");
         this->PointCount = 0;
+    }
+
+    ~MyView()
+    {
+        this->destroy(true, true);
     }
 
     void SetImage(QImage img)
@@ -104,12 +109,12 @@ public slots:
         QPointF pos =  mapToScene( event->pos() );
         int x = ( int )pos.x();
         int y = ( int )pos.y();
-        drawColorDot(&Qimage, qRgb(0,255,0), x, y);
         if (PointCount > 5) return;
         ClickPointX[PointCount] = x;
         ClickPointY[PointCount] = y;
         PointCount++;
         QRgb rgb = this->Qimage.pixel( x, y );
+        drawColorDot(&Qimage, qRgb(0,255,0), x, y);
         if (this->Mode == CalculateDistance && PointCount % 2 == 0)
         {
             QLabel *qlDistance = new QLabel(this);
@@ -154,6 +159,19 @@ public slots:
         qlPixelInfo->show();
     }
 
+    void mouseMoveEvent(QMouseEvent* event)
+    {
+        QPointF pos =  mapToScene( event->pos() );
+        int x = ( int )pos.x();
+        int y = ( int )pos.y();
+        QRgb rgb = this->Qimage.pixel( x, y );
+        QString info;
+        info.sprintf("(%d,%d)=(%d,%d,%d)", x, y, qRed(rgb), qGreen(rgb), qBlue(rgb));
+
+        qlPixelInfo->setText(info);
+        qlPixelInfo->show();
+    }
+
 private slots:
 private:
     QImage Qimage;
@@ -164,6 +182,8 @@ private:
     int ClickPointX[6], ClickPointY[6];
     ViewMode Mode;
 };
+
+MyView *mv;
 
 ImageViewer::ImageViewer()
 {
@@ -181,6 +201,38 @@ ImageViewer::ImageViewer()
     createMenus();
 
     resize(QGuiApplication::primaryScreen()->availableSize() * 3 / 5);
+
+    int btn_hight = 50;
+    QPushButton *btnOpen = new QPushButton(this);
+    btnOpen->setGeometry(0,btn_hight,100,30);
+    btnOpen->setText("Open");
+    connect(btnOpen, SIGNAL (released()),this, SLOT (open()));
+
+    QPushButton *btnReset = new QPushButton(this);
+    btnReset->setGeometry(0,btn_hight*2,100,30);
+    btnReset->setText("Reset");
+    connect(btnReset, SIGNAL (released()),this, SLOT (slotReset()));
+
+    QPushButton *btnSave = new QPushButton(this);
+    btnSave->setGeometry(0,btn_hight*3,100,30);
+    btnSave->setText("Save");
+    connect(btnSave, SIGNAL (released()),this, SLOT (slotSave()));
+}
+
+void ImageViewer::slotReset()
+{
+    mv->~MyView();
+    mv = new(std::nothrow) MyView(this);
+    mv->setGeometry(500,200, 500, 500);
+    mv->SetImage(S_Image);
+    mv->setViewMode(CalculateDistance);
+    mv->Display();
+}
+
+void ImageViewer::slotSave()
+{
+    QPixmap save_image = QPixmap::grabWindow(mv->winId());
+    save_image.save("save_image.bmp");
 }
 
 //! [0]
@@ -200,8 +252,8 @@ bool ImageViewer::loadFile(const QString &fileName)
 //! [2] //! [3]
     S_Image = image;
 //    imageLabel->setPixmap(QPixmap::fromImage(S_Image));
-    MyView *mv = new(std::nothrow) MyView(this);
-    mv->setGeometry(100, 200, 500, 500);
+    mv = new(std::nothrow) MyView(this);
+    mv->setGeometry(500,200, 500, 500);
     mv->SetImage(S_Image);
     mv->setViewMode(CalculateDistance);
     mv->Display();

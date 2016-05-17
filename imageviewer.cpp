@@ -43,6 +43,7 @@
 #include <QPrintDialog>
 #endif
 
+#include "qdebug.h"
 #include "imageviewer.h"
 
 typedef struct PNT {
@@ -58,6 +59,7 @@ typedef enum
     CalculateDistance,
     RegionGrowing
 }ViewMode;
+
 
 class MyView:public QGraphicsView
 {
@@ -184,6 +186,7 @@ private:
 };
 
 MyView *mv;
+QString FileName = "";
 
 ImageViewer::ImageViewer()
 {
@@ -232,7 +235,7 @@ void ImageViewer::slotReset()
 void ImageViewer::slotSave()
 {
     QPixmap save_image = QPixmap::grabWindow(mv->winId());
-    save_image.save("save_image.bmp");
+    save_image.save(FileName.remove(".bmp") + "_out.bmp");
 }
 
 //! [0]
@@ -241,6 +244,8 @@ void ImageViewer::slotSave()
 bool ImageViewer::loadFile(const QString &fileName)
 {
     QImage image(fileName);
+    FileName = fileName;
+    qDebug() <<"file name is : " << FileName <<endl;
     if (image.isNull()) {
         QMessageBox::information(this, QGuiApplication::applicationDisplayName(),
                                  tr("Cannot load %1.").arg(QDir::toNativeSeparators(fileName)));
